@@ -247,7 +247,8 @@ def profile():
         
         else: 
             flash("Wrong Username/Password")
-            return redirect('/')
+            # so wrong password doesn't lead to redirect to homepage
+            # return redirect('/')
 
     return render_template('/users/edit.html', form=form)
 
@@ -256,6 +257,7 @@ def profile():
 def delete_user():
     """Delete user."""
 
+    # add CSRF protection with CSRF token
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
@@ -331,6 +333,7 @@ def homepage():
 
     form = CSRFProtectForm()
     
+    #iterate thru g.user.following
     following_and_self = g.user.following + [g.user]
     
     list_of_ids = [user.id for user in following_and_self]
