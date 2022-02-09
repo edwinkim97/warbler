@@ -232,7 +232,7 @@ def profile():
         header_image_url = form.header_image_url.data
         bio = form.bio.data
 
-        user = User.authenticate(username, password)
+        user = User.authenticate(g.user.username, password)
 
         if user:
             user.username = username
@@ -244,6 +244,10 @@ def profile():
             db.session.commit()
 
             return redirect(f'/users/{g.user.id}')
+        
+        else: 
+            flash("Wrong Username/Password")
+            return redirect('/')
 
     return render_template('/users/edit.html', form=form)
 
@@ -326,10 +330,14 @@ def homepage():
     """
 
     form = CSRFProtectForm()
-
+    
+    following_and_self = g.user.following + [g.user]
+    
+    list_of_ids = [user.id for user in following_and_self]
+    
     if g.user:
-        messages = (Message
-                    .query
+        messages = (Message.query
+                    .filter(Message.user_id.in_(list_of_ids))
                     .order_by(Message.timestamp.desc())
                     .limit(100)
                     .all())
