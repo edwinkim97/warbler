@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, flash, redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
-from forms import UserAddForm, LoginForm, MessageForm
+from forms import UserAddForm, LoginForm, MessageForm, CSRFProtectForm
 from models import db, connect_db, User, Message
 
 CURR_USER_KEY = "curr_user"
@@ -34,12 +34,13 @@ db.create_all()
 def add_user_to_g():
     """If we're logged in, add curr user to Flask global."""
 
+    add_csrf_form_to_all_pages()
+
     if CURR_USER_KEY in session:
         g.user = User.query.get(session[CURR_USER_KEY])
-
+        
     else:
         g.user = None
-
 
 def do_login(user):
     """Log in user."""
@@ -52,6 +53,12 @@ def do_logout():
 
     if CURR_USER_KEY in session:
         del session[CURR_USER_KEY]
+
+def add_csrf_form_to_all_pages():
+    """Before every route, add CSRF-only form to global object."""
+
+    g.csrf_form = CSRFProtectForm()
+
 
 
 @app.route('/signup', methods=["GET", "POST"])
@@ -113,9 +120,16 @@ def login():
 @app.post('/logout')
 def logout():
     """Handle logout of user."""
-
-    # IMPLEMENT THIS AND FIX BUG
-    # DO NOT CHANGE METHOD ON ROUTE
+    
+    form = CSRFProtectForm()
+    
+    if form.validate_on_submit():
+        do_logout()
+        
+    flash("You logged out!")
+    return redirect("/login")
+        
+        
 
 
 ##############################################################################
@@ -285,6 +299,8 @@ def homepage():
     - logged in: 100 most recent messages of followed_users
     """
 
+    form = CSRFProtectForm()
+    
     if g.user:
         messages = (Message
                     .query
@@ -292,7 +308,7 @@ def homepage():
                     .limit(100)
                     .all())
 
-        return render_template('home.html', messages=messages)
+        return render_template('home.html', messages=messages, form=form)
 
     else:
         return render_template('home-anon.html')
