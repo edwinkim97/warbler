@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, flash, redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
-from forms import UserAddForm, LoginForm, MessageForm, CSRFProtectForm
+from forms import UserAddForm, LoginForm, MessageForm, CSRFProtectForm, EditUserProfileForm
 from models import db, connect_db, User, Message
 
 CURR_USER_KEY = "curr_user"
@@ -38,9 +38,10 @@ def add_user_to_g():
 
     if CURR_USER_KEY in session:
         g.user = User.query.get(session[CURR_USER_KEY])
-        
+
     else:
         g.user = None
+
 
 def do_login(user):
     """Log in user."""
@@ -54,11 +55,11 @@ def do_logout():
     if CURR_USER_KEY in session:
         del session[CURR_USER_KEY]
 
+
 def add_logout_form():
     """Before every route, add CSRF-only form to global object."""
 
     g.csrf_form = CSRFProtectForm()
-
 
 
 @app.route('/signup', methods=["GET", "POST"])
@@ -120,16 +121,14 @@ def login():
 @app.post('/logout')
 def logout():
     """Handle logout of user."""
-    
+
     logout_form = g.csrf_form
 
     if logout_form.validate_on_submit():
         do_logout()
-        
+
     flash("You logged out!")
     return redirect("/login")
-        
-        
 
 
 ##############################################################################
@@ -219,7 +218,34 @@ def stop_following(follow_id):
 def profile():
     """Update profile for current user."""
 
-    # IMPLEMENT THIS
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    form = EditUserProfileForm(obj=g.user)
+
+    if form.validate_on_submit():
+        username = form.username.data
+        password = form.password.data
+        email = form.email.data
+        image_url = form.image_url.data
+        header_image_url = form.header_image_url.data
+        bio = form.bio.data
+
+        user = User.authenticate(username, password)
+
+        if user:
+            user.username = username
+            user.email = email
+            user.image_url = image_url
+            user.header_image_url = header_image_url
+            user.bio = bio
+
+            db.session.commit()
+
+            return redirect(f'/users/{g.user.id}')
+
+    return render_template('/users/edit.html', form=form)
 
 
 @app.post('/users/delete')
@@ -300,7 +326,7 @@ def homepage():
     """
 
     form = CSRFProtectForm()
-    
+
     if g.user:
         messages = (Message
                     .query
