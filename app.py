@@ -34,7 +34,7 @@ db.create_all()
 def add_user_to_g():
     """If we're logged in, add curr user to Flask global."""
 
-    add_csrf_form_to_all_pages()
+    add_logout_form()
 
     if CURR_USER_KEY in session:
         g.user = User.query.get(session[CURR_USER_KEY])
@@ -54,7 +54,7 @@ def do_logout():
     if CURR_USER_KEY in session:
         del session[CURR_USER_KEY]
 
-def add_csrf_form_to_all_pages():
+def add_logout_form():
     """Before every route, add CSRF-only form to global object."""
 
     g.csrf_form = CSRFProtectForm()
@@ -121,9 +121,9 @@ def login():
 def logout():
     """Handle logout of user."""
     
-    form = CSRFProtectForm()
-    
-    if form.validate_on_submit():
+    logout_form = g.csrf_form
+
+    if logout_form.validate_on_submit():
         do_logout()
         
     flash("You logged out!")
