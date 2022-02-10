@@ -1,31 +1,33 @@
 {% extends 'users/detail.html' %}
 {% block user_details %}
-  <div class="col-sm-6">
+<div class="col-sm-6">
     <ul class="list-group" id="messages">
 
-      {% for message in user.messages %}
+        {% for message in user.messages %}
 
         <li class="list-group-item">
-          <a href="/messages/{{ message.id }}" class="message-link"/>
+            <a href="/messages/{{ message.id }}" class="message-link" />
 
-          <a href="/users/{{ user.id }}">
-            <img src="{{ user.image_url }}" alt="user image" class="timeline-image">
-          </a>
+            <a href="/users/{{ user.id }}">
+                <img src="{{ user.image_url }}" alt="user image" class="timeline-image">
+            </a>
 
-          <div class="message-area">
-            <a href="/users/{{ user.id }}">@{{ user.username }}</a>
-            <span class="text-muted">
-              {{ message.timestamp.strftime('%d %B %Y') }}
-            </span>
-            <p>{{ message.text }}</p>
-            <form action="" method="POST">
-              <button type="submit"><i class="far fa-star"></i></button>
-            </form>
-          </div>
+            <div class="message-area">
+                <a href="/users/{{ user.id }}">@{{ user.username }}</a>
+                <span class="text-muted">
+                    {{ message.timestamp.strftime('%d %B %Y') }}
+                </span>
+                <p>{{ message.text }}</p>
+                <form action="" method="POST">
+                    {{ form.hidden_tag() }}
+                    <input value='{{ message.id }}' type="hidden" name="message_id">
+                    <button type="submit"><i class="far fa-star"></i></button>
+                </form>
+            </div>
         </li>
 
-      {% endfor %}
+        {% endfor %}
 
     </ul>
-  </div>
+</div>
 {% endblock %}

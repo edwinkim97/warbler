@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, TextAreaField
+from wtforms import StringField, PasswordField, TextAreaField, HiddenField
 from wtforms.validators import DataRequired, Email, Length
 
 
@@ -38,3 +38,11 @@ class EditUserProfileForm(FlaskForm):
     header_image_url = StringField('Header Image URL')
     bio = StringField('Bio')
     password = PasswordField('Password', validators=[Length(min=6)])
+
+
+class LikesForm(FlaskForm):
+    """Form to capture hidden user_id and message_id values for displaying 
+    message likes"""
+
+    user_id = HiddenField('User_id')
+    message_id = HiddenField('Message_id')
