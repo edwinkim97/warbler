@@ -314,8 +314,10 @@ def messages_add():
 def messages_show(message_id):
     """Show a message."""
 
+    form = LikesForm()
+
     msg = Message.query.get(message_id)
-    return render_template('messages/show.html', message=msg)
+    return render_template('messages/show.html', message=msg, form=form)
 
 
 @app.post('/messages/<int:message_id>/delete')
@@ -400,7 +402,7 @@ def liking_messages_on_homepage():
         if message:
             disliking_message(message_id)
 
-        else: 
+        else:
             liking_message(message_id)
 
     return redirect('/')
@@ -415,11 +417,15 @@ def liking_messages_on_user_detail_page(user_id):
     if form.validate_on_submit():
         
         message_id = form.message_id.data
+        message = MessageLikes.query.get((message_id, g.user.id))
+        
+        # Case when user has already liked message
+        # if (g.user.id == message.user_id) and (message_id == message.message_id):
+        if message:
+            disliking_message(message_id)
 
-        liked = MessageLikes(message_id = message_id, user_id = g.user.id)
-
-        db.session.add(liked)
-        db.session.commit()
+        else:
+            liking_message(message_id)
 
     return redirect(f'/users/{user_id}')
 
@@ -432,11 +438,15 @@ def liking_messages_on_message_page(message_id):
     if form.validate_on_submit():
         
         message_id = form.message_id.data
+        message = MessageLikes.query.get((message_id, g.user.id))
+        
+        # Case when user has already liked message
+        # if (g.user.id == message.user_id) and (message_id == message.message_id):
+        if message:
+            disliking_message(message_id)
 
-        liked = MessageLikes(message_id = message_id, user_id = g.user.id)
-
-        db.session.add(liked)
-        db.session.commit()
+        else:
+            liking_message(message_id)
 
     return redirect(f'/messages/{message_id}')
     

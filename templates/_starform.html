@@ -1,5 +1,10 @@
 <form method="POST">
     {{ form.hidden_tag() }}
     <input value='{{ message.id }}' type="hidden" name="message_id">
+    {% if message.message_likes %}
+    <button type="submit"><i class="fas fa-star"></i></button>
+    {% else %}
     <button type="submit"><i class="far fa-star"></i></button>
+    {% endif %}
+
 </form>
