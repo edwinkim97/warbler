@@ -6,7 +6,7 @@ from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
 from forms import UserAddForm, LoginForm, MessageForm, CSRFProtectForm, EditUserProfileForm, LikesForm
-from models import db, connect_db, User, Message
+from models import db, connect_db, User, Message, MessageLikes
 
 CURR_USER_KEY = "curr_user"
 load_dotenv()
@@ -346,7 +346,7 @@ def homepage():
     """
 
     form = CSRFProtectForm()
-    
+
     if g.user:
         
         following_and_self = g.user.following + [g.user]
@@ -372,11 +372,19 @@ def liking_messages_on_homepage():
     """Handles liking and disliking messages on homepage"""
     
     form = LikesForm()
-    breakpoint()
-    
+
     if form.validate_on_submit():
         
         message_id = form.message_id.data
+
+        liked = MessageLikes(message_id = message_id, user_id = g.user.id)
+
+        db.session.add(liked)
+        db.session.commit()
+
+        return redirect('/')
+
+
 
 @app.post('/users/<int:user_id>')
 def liking_messages_on_user_detail_page():
