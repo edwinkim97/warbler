@@ -44,5 +44,4 @@ class LikesForm(FlaskForm):
     """Form to capture hidden user_id and message_id values for displaying 
     message likes"""
 
-    user_id = HiddenField('User_id')
     message_id = HiddenField('Message_id')

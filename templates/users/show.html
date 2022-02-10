@@ -6,7 +6,7 @@
         {% for message in user.messages %}
 
         <li class="list-group-item">
-            <a href="/messages/{{ message.id }}" class="message-link" />
+            <a href="/messages/{{ message.id }}" class="message-link"></a>
 
             <a href="/users/{{ user.id }}">
                 <img src="{{ user.image_url }}" alt="user image" class="timeline-image">
@@ -17,13 +17,13 @@
                 <span class="text-muted">
                     {{ message.timestamp.strftime('%d %B %Y') }}
                 </span>
-                <p>{{ message.text }}</p>
-                <form action="" method="POST">
-                    {{ form.hidden_tag() }}
-                    <input value='{{ message.id }}' type="hidden" name="message_id">
-                    <button type="submit"><i class="far fa-star"></i></button>
-                </form>
+                <p>{{ message.text }}</p> 
             </div>
+            <form action="/" method="POST">
+                {{ form.hidden_tag() }}
+                <input value='{{ message.id }}' type="hidden" name="message_id">
+                <button type="submit"><i class="far fa-star"></i></button>
+            </form>
         </li>
 
         {% endfor %}

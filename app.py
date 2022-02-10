@@ -5,7 +5,7 @@ from flask import Flask, render_template, request, flash, redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
-from forms import UserAddForm, LoginForm, MessageForm, CSRFProtectForm, EditUserProfileForm
+from forms import UserAddForm, LoginForm, MessageForm, CSRFProtectForm, EditUserProfileForm, LikesForm
 from models import db, connect_db, User, Message
 
 CURR_USER_KEY = "curr_user"
@@ -363,6 +363,32 @@ def homepage():
 
     else:
         return render_template('home-anon.html')
+    
+##############################################################################
+# Liking and Unliking warblers
+
+@app.post('/')
+def liking_messages_on_homepage():
+    """Handles liking and disliking messages on homepage"""
+    
+    form = LikesForm()
+    breakpoint()
+    
+    if form.validate_on_submit():
+        
+        message_id = form.message_id.data
+
+@app.post('/users/<int:user_id>')
+def liking_messages_on_user_detail_page():
+    """Handles liking and disliking messages on user detail page"""
+
+@app.post('/messages/<int:message_id>')
+def liking_messages_on_message_page():
+    """Handles liking and disliking messages on message page"""
+    
+    
+# End of Liking and Unliking warblers
+##############################################################################
 
 
 ##############################################################################
