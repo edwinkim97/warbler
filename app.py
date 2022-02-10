@@ -1,3 +1,4 @@
+from email.utils import collapse_rfc2231_value
 import os
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, flash, redirect, session, g
@@ -155,33 +156,39 @@ def list_users():
 def users_show(user_id):
     """Show user profile."""
 
+    form = CSRFProtectForm()
+
     user = User.query.get_or_404(user_id)
 
-    return render_template('users/show.html', user=user)
+    return render_template('users/show.html', user=user, form=form)
 
 
 @app.get('/users/<int:user_id>/following')
 def show_following(user_id):
     """Show list of people this user is following."""
 
+    form = CSRFProtectForm()
+
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
-    return render_template('users/following.html', user=user)
+    return render_template('users/following.html', user=user, form=form)
 
 
 @app.get('/users/<int:user_id>/followers')
 def users_followers(user_id):
     """Show list of followers of this user."""
 
+    form = CSRFProtectForm()
+
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
-    return render_template('users/followers.html', user=user)
+    return render_template('users/followers.html', user=user, form=form)
 
 
 @app.post('/users/follow/<int:follow_id>')
@@ -229,7 +236,11 @@ def profile():
         password = form.password.data
         email = form.email.data
         image_url = form.image_url.data
+        if image_url == "":
+            image_url = "/static/images/default-pic.png"
         header_image_url = form.header_image_url.data
+        if header_image_url == "":
+            header_image_url = "/static/images/warbler-hero.jpg"
         bio = form.bio.data
 
         user = User.authenticate(g.user.username, password)
@@ -257,17 +268,20 @@ def profile():
 def delete_user():
     """Delete user."""
 
-    # add CSRF protection with CSRF token
+    form = CSRFProtectForm()
+    
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    do_logout()
+    if form.validate_on_submit():
+        do_logout()
 
-    db.session.delete(g.user)
-    db.session.commit()
+        Message.query.filter(Message.user_id == g.user.id).delete()
+        db.session.delete(g.user)
+        db.session.commit()
 
-    return redirect("/signup")
+        return redirect("/signup")
 
 
 ##############################################################################
@@ -333,12 +347,12 @@ def homepage():
 
     form = CSRFProtectForm()
     
-    #iterate thru g.user.following
-    following_and_self = g.user.following + [g.user]
-    
-    list_of_ids = [user.id for user in following_and_self]
-    
     if g.user:
+        
+        following_and_self = g.user.following + [g.user]
+    
+        list_of_ids = [user.id for user in following_and_self]
+        
         messages = (Message.query
                     .filter(Message.user_id.in_(list_of_ids))
                     .order_by(Message.timestamp.desc())
