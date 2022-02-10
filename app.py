@@ -367,9 +367,48 @@ def homepage():
 ##############################################################################
 # Liking and Unliking warblers
 
+def liking_message(message_id):
+    """Liking message and adding it to database"""
+    
+    liked = MessageLikes(message_id = message_id, user_id = g.user.id)
+
+    db.session.add(liked)
+    db.session.commit()
+    
+def disliking_message(message_id):
+    "Disliking message and removing from database"
+    
+    disliked = MessageLikes.query.get((message_id, g.user.id))
+    
+    db.session.delete(disliked)
+    db.session.commit()
+
 @app.post('/')
 def liking_messages_on_homepage():
     """Handles liking and disliking messages on homepage"""
+    
+    form = LikesForm()
+
+    
+    if form.validate_on_submit():
+        
+        message_id = form.message_id.data
+        message = MessageLikes.query.get((message_id, g.user.id))
+        
+        # Case when user has already liked message
+        # if (g.user.id == message.user_id) and (message_id == message.message_id):
+        if message:
+            disliking_message(message_id)
+
+        else: 
+            liking_message(message_id)
+
+    return redirect('/')
+
+
+@app.post('/users/<int:user_id>')
+def liking_messages_on_user_detail_page(user_id):
+    """Handles liking and disliking messages on user detail page"""
     
     form = LikesForm()
 
@@ -382,17 +421,24 @@ def liking_messages_on_homepage():
         db.session.add(liked)
         db.session.commit()
 
-        return redirect('/')
-
-
-
-@app.post('/users/<int:user_id>')
-def liking_messages_on_user_detail_page():
-    """Handles liking and disliking messages on user detail page"""
+    return redirect(f'/users/{user_id}')
 
 @app.post('/messages/<int:message_id>')
-def liking_messages_on_message_page():
+def liking_messages_on_message_page(message_id):
     """Handles liking and disliking messages on message page"""
+    
+    form = LikesForm()
+
+    if form.validate_on_submit():
+        
+        message_id = form.message_id.data
+
+        liked = MessageLikes(message_id = message_id, user_id = g.user.id)
+
+        db.session.add(liked)
+        db.session.commit()
+
+    return redirect(f'/messages/{message_id}')
     
     
 # End of Liking and Unliking warblers

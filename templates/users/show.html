@@ -5,6 +5,7 @@
 
         {% for message in user.messages %}
 
+        {% include '_starform.html' %}
         <li class="list-group-item">
            
            <a href="/messages/{{ message.id }}" class="message-link"></a>
@@ -20,8 +21,7 @@
                 </span>
                 <p>{{ message.text }}</p> 
             </div>
-            {% include '_starform.html' %}
-            
+     
         </li>
 
         {% endfor %}
