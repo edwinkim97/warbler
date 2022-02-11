@@ -43,7 +43,6 @@ def add_user_to_g():
     else:
         g.user = None
 
-# TODO another app.before_request route to include CRSF form to all pages
 
 def do_login(user):
     """Log in user."""
@@ -157,8 +156,6 @@ def list_users():
 def users_show(user_id):
     """Show user profile."""
 
-    form = CSRFProtectForm()
-
     user = User.query.get_or_404(user_id)
 
     user_likes = MessageLikes.query.filter(MessageLikes.user_id==user_id).count()
@@ -166,7 +163,7 @@ def users_show(user_id):
     return render_template(
         'users/show.html',
         user=user,
-        form=form,
+        form=g.csrf_form,
         user_likes=user_likes,
         )
 
@@ -175,35 +172,41 @@ def users_show(user_id):
 def show_following(user_id):
     """Show list of people this user is following."""
 
-    form = CSRFProtectForm()
 
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
-    return render_template('users/following.html', user=user, form=form)
+    user_likes = MessageLikes.query.filter(MessageLikes.user_id==user_id).count()
+
+    return render_template(
+        'users/following.html',
+        user=user,
+        form=g.csrf_form,
+        user_likes=user_likes)
 
 
 @app.get('/users/<int:user_id>/followers')
 def users_followers(user_id):
     """Show list of followers of this user."""
 
-    form = CSRFProtectForm()
-
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
+    user_likes = MessageLikes.query.filter(MessageLikes.user_id==user_id).count()
     user = User.query.get_or_404(user_id)
-    return render_template('users/followers.html', user=user, form=form)
+    return render_template(
+        'users/followers.html',
+        user=user,
+        form=g.csrf_form,
+        user_likes=user_likes)
 
 
 @app.get('/users/<int:user_id>/likes')
 def show_likes(user_id):
     """Show list of messages this user is likes."""
-
-    form = CSRFProtectForm()
 
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -213,7 +216,7 @@ def show_likes(user_id):
 
     return render_template('users/likes.html',
                            user=user, 
-                           form=form, 
+                           form=g.csrf_form, 
                            )
 
 
@@ -293,14 +296,12 @@ def profile():
 @app.post('/users/delete')
 def delete_user():
     """Delete user."""
-
-    form = CSRFProtectForm()
     
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    if form.validate_on_submit():
+    if g.csrf_form.validate_on_submit():
         do_logout()
 
         Message.query.filter(Message.user_id == g.user.id).delete()
@@ -340,13 +341,11 @@ def messages_add():
 def messages_show(message_id):
     """Show a message."""
 
-    form = CSRFProtectForm()
-
     msg = Message.query.get(message_id)
     return render_template(
         'messages/show.html',
         message=msg,
-        form=form,
+        form=g.csrf_form,
         )
 
 
@@ -377,8 +376,6 @@ def homepage():
     - logged in: 100 most recent messages of followed_users
     """
 
-    form = CSRFProtectForm()
-
     if g.user:
         
         following_and_self = g.user.following + [g.user]
@@ -394,7 +391,7 @@ def homepage():
         return render_template(
             'home.html',
             messages=messages,
-            form=form,
+            form=g.csrf_form,
             )
 
     else:
