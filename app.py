@@ -19,7 +19,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = (
     os.getenv('DATABASE_URL').replace("postgres://", "postgresql://"))
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ECHO'] = False
-app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = True
+app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 toolbar = DebugToolbarExtension(app)
 
@@ -162,11 +162,15 @@ def users_show(user_id):
 
     user_likes = MessageLikes.query.filter(MessageLikes.user_id==user_id).count()
 
+    message_like_ids = [message_like.message_id for message_like in g.user.message_likes]
+
+
     return render_template(
         'users/show.html',
         user=user,
         form=form,
-        user_likes=user_likes)
+        user_likes=user_likes,
+        message_like_ids=message_like_ids)
 
 
 @app.get('/users/<int:user_id>/following')
@@ -339,8 +343,15 @@ def messages_show(message_id):
 
     form = CSRFProtectForm()
 
+    message_like_ids = [message_like.message_id for message_like in g.user.message_likes]
+
     msg = Message.query.get(message_id)
-    return render_template('messages/show.html', message=msg, form=form)
+    return render_template(
+        'messages/show.html',
+        message=msg,
+        form=form,
+        message_like_ids=message_like_ids
+    )
 
 
 @app.post('/messages/<int:message_id>/delete')
@@ -384,7 +395,16 @@ def homepage():
                     .limit(100)
                     .all())
 
-        return render_template('home.html', messages=messages, form=form)
+        message_like_ids = [message_like.message_id 
+            for message_like in g.user.message_likes]
+
+
+        return render_template(
+            'home.html',
+            messages=messages,
+            form=form,
+            message_like_ids=message_like_ids
+)
 
     else:
         return render_template('home-anon.html')
@@ -393,7 +413,7 @@ def homepage():
 # Liking and Unliking warblers
 
 def liking_message(message_id):
-    """Liking message and adding it to database"""
+    """Liking message and adding it to message_likes table"""
     
     liked = MessageLikes(message_id = message_id, user_id = g.user.id)
 
@@ -401,7 +421,7 @@ def liking_message(message_id):
     db.session.commit()
     
 def disliking_message(message_id):
-    "Disliking message and removing from database"
+    """Disliking message and removing from message_likes table"""
     
     disliked = MessageLikes.query.get((message_id, g.user.id))
     

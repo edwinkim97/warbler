@@ -36,6 +36,11 @@ body.error-404 {
   font-size: 13px;
   font-weight: bold;
 }
+.navbar form button {
+    color: #66757f;
+    font-size: 13px;
+    font-weight: bold;
+  }
 
 .navbar a:hover {
   color: #1c94e0;
