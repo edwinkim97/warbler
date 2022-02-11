@@ -202,8 +202,7 @@ def show_likes(user_id):
     """Show list of messages this user is likes."""
 
     form = CSRFProtectForm()
-
-
+    
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
@@ -470,6 +469,27 @@ def liking_messages_on_message_page(message_id):
             liking_message(message_id)
 
     return redirect(f'/messages/{message_id}')
+
+@app.post('/users/<int:user_id>/likes')
+def handles_liking_user_likes_page(user_id):
+    """Handles liking and disliking on user profile's liked messages' page"""
+    
+    form = LikesForm()
+
+    if form.validate_on_submit():
+        
+        message_id = form.message_id.data
+        message = MessageLikes.query.get((message_id, g.user.id))
+        # Case when user has already liked message
+        # if (g.user.id == message.user_id) and (message_id == message.message_id):
+        if message:
+            disliking_message(message_id)
+
+        else:
+            liking_message(message_id)
+
+    return redirect(f'/users/{user_id}/likes')
+    
     
     
 # End of Liking and Unliking warblers
