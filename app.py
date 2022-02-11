@@ -160,7 +160,13 @@ def users_show(user_id):
 
     user = User.query.get_or_404(user_id)
 
-    return render_template('users/show.html', user=user, form=form)
+    user_likes = MessageLikes.query.filter(MessageLikes.user_id==user_id).count()
+
+    return render_template(
+        'users/show.html',
+        user=user,
+        form=form,
+        user_likes=user_likes)
 
 
 @app.get('/users/<int:user_id>/following')
@@ -189,6 +195,22 @@ def users_followers(user_id):
 
     user = User.query.get_or_404(user_id)
     return render_template('users/followers.html', user=user, form=form)
+
+
+@app.get('/users/<int:user_id>/likes')
+def show_likes(user_id):
+    """Show list of messages this user is likes."""
+
+    form = CSRFProtectForm()
+
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    user = User.query.get_or_404(user_id)
+
+    return render_template('users/likes.html', user=user, form=form)
 
 
 @app.post('/users/follow/<int:follow_id>')
