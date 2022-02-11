@@ -202,6 +202,8 @@ def show_likes(user_id):
     """Show list of messages this user is likes."""
 
     form = CSRFProtectForm()
+
+    message_like_ids = [message_like.message_id for message_like in g.user.message_likes]
     
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -209,7 +211,7 @@ def show_likes(user_id):
 
     user = User.query.get_or_404(user_id)
 
-    return render_template('users/likes.html', user=user, form=form)
+    return render_template('users/likes.html', user=user, form=form, message_like_ids=message_like_ids)
 
 
 @app.post('/users/follow/<int:follow_id>')
