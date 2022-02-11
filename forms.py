@@ -39,9 +39,7 @@ class EditUserProfileForm(FlaskForm):
     bio = StringField('Bio')
     password = PasswordField('Password', validators=[Length(min=6)])
 
-
 class LikesForm(FlaskForm):
-    """Form to capture hidden user_id and message_id values for displaying 
-    message likes"""
-
-    message_id = HiddenField('Message_id')
+    """Form for handling likes"""
+    
+    message_id = HiddenField("likes")

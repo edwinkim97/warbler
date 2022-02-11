@@ -314,7 +314,7 @@ def messages_add():
 def messages_show(message_id):
     """Show a message."""
 
-    form = LikesForm()
+    form = CSRFProtectForm()
 
     msg = Message.query.get(message_id)
     return render_template('messages/show.html', message=msg, form=form)
@@ -390,7 +390,6 @@ def liking_messages_on_homepage():
     """Handles liking and disliking messages on homepage"""
     
     form = LikesForm()
-
     
     if form.validate_on_submit():
         
