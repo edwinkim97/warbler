@@ -268,9 +268,15 @@ nav + .container {
   z-index: 1;
 }
 
-#messages .fa-star {
-    z-index: 3;
-  }
+/* ======================= Star */
+
+.star-button {
+  z-index: 5;
+  position: relative;
+  display: inline-block;
+}
+
+/* ======================= StarEnd */
 
 #messages .list-group-item a:not(.message-link) {
   position: relative;
