@@ -43,3 +43,4 @@ class LikesForm(FlaskForm):
     """Form for handling likes"""
     
     message_id = HiddenField("likes")
+    redirect = HiddenField("redirect")

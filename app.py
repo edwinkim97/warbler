@@ -163,15 +163,12 @@ def users_show(user_id):
 
     user_likes = MessageLikes.query.filter(MessageLikes.user_id==user_id).count()
 
-    message_like_ids = [message_like.message_id for message_like in g.user.message_likes]
-
-
     return render_template(
         'users/show.html',
         user=user,
         form=form,
         user_likes=user_likes,
-        message_like_ids=message_like_ids)
+        )
 
 
 @app.get('/users/<int:user_id>/following')
@@ -208,15 +205,16 @@ def show_likes(user_id):
 
     form = CSRFProtectForm()
 
-    message_like_ids = [message_like.message_id for message_like in g.user.message_likes]
-    
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
 
-    return render_template('users/likes.html', user=user, form=form, message_like_ids=message_like_ids)
+    return render_template('users/likes.html',
+                           user=user, 
+                           form=form, 
+                           )
 
 
 @app.post('/users/follow/<int:follow_id>')
@@ -344,15 +342,12 @@ def messages_show(message_id):
 
     form = CSRFProtectForm()
 
-    message_like_ids = [message_like.message_id for message_like in g.user.message_likes]
-
     msg = Message.query.get(message_id)
     return render_template(
         'messages/show.html',
         message=msg,
         form=form,
-        message_like_ids=message_like_ids
-    )
+        )
 
 
 @app.post('/messages/<int:message_id>/delete')
@@ -396,16 +391,11 @@ def homepage():
                     .limit(100)
                     .all())
 
-        message_like_ids = [message_like.message_id 
-            for message_like in g.user.message_likes]
-
-
         return render_template(
             'home.html',
             messages=messages,
             form=form,
-            message_like_ids=message_like_ids
-)
+            )
 
     else:
         return render_template('home-anon.html')
@@ -421,8 +411,6 @@ def liking_message(message_id):
     liked = MessageLikes(message_id = message_id, user_id = g.user.id)
 
     db.session.add(liked)
-    # TODO db.session.commit() should not be in this helper function - it should live in the route
-    db.session.commit()
     
 def disliking_message(message_id):
     """Disliking message and removing from message_likes table"""
@@ -431,98 +419,37 @@ def disliking_message(message_id):
     
     db.session.delete(disliked)
     
-    # TODO db.session.commit() should not be in this helper function - it should live in the route
-    db.session.commit()
-
-@app.post('/')
-# rename toggle like status
-def liking_messages_on_homepage():
-    """Handles liking and disliking messages on homepage"""
-    
-    form = LikesForm()
-    
-    if form.validate_on_submit():
-        
-        message_id = form.message_id.data
-        message = MessageLikes.query.get((message_id, g.user.id))
-        
-        # Case when user has already liked message
-        # if (g.user.id == message.user_id) and (message_id == message.message_id):
-        if message:
-            disliking_message(message_id)
-
-        else:
-            liking_message(message_id)
-
-    return redirect('/')
-
-# request.refer as an option for dymamic routes
-# form render include a hidden input value = request.url
-
-@app.post('/users/<int:user_id>')
-def liking_messages_on_user_detail_page(user_id):
-    """Handles liking and disliking messages on user detail page"""
-    
-    form = LikesForm()
-
-    if form.validate_on_submit():
-        
-        message_id = form.message_id.data
-        message = MessageLikes.query.get((message_id, g.user.id))
-        
-        # Case when user has already liked message
-        # if (g.user.id == message.user_id) and (message_id == message.message_id):
-        if message:
-            disliking_message(message_id)
-
-        else:
-            liking_message(message_id)
-
-    return redirect(f'/users/{user_id}')
-
-@app.post('/messages/<int:message_id>')
-def liking_messages_on_message_page(message_id):
-    """Handles liking and disliking messages on message page"""
-    
-    form = LikesForm()
-
-    if form.validate_on_submit():
-        
-        message_id = form.message_id.data
-        message = MessageLikes.query.get((message_id, g.user.id))
-        
-        # Case when user has already liked message
-        # if (g.user.id == message.user_id) and (message_id == message.message_id):
-        if message:
-            disliking_message(message_id)
-
-        else:
-            liking_message(message_id)
-
-    return redirect(f'/messages/{message_id}')
-
 @app.post('/users/<int:user_id>/likes')
-def handles_liking_user_likes_page(user_id):
-    """Handles liking and disliking on user profile's liked messages' page"""
-    #TODO should explain return location
+@app.post('/messages/<int:message_id>')
+@app.post('/users/<int:user_id>')
+@app.post('/')
+def handles_like_unlike(**kwargs):
+    """Handles likes and dislikes on warblers with forms and redirects to same page"""
     
     form = LikesForm()
 
     if form.validate_on_submit():
         
         message_id = form.message_id.data
-        #TODO message is not message_like
-        message = MessageLikes.query.get((message_id, g.user.id))
-        # Case when user has already liked message
-        # if (g.user.id == message.user_id) and (message_id == message.message_id):
-        if message:
-            disliking_message(message_id)
+        page = form.redirect.data
+        
+        message = Message.query.get(message_id)
+        message_user_id = message.user_id
+        
+        if message_user_id != g.user.id:
 
-        else:
-            liking_message(message_id)
-
-    return redirect(f'/users/{user_id}/likes')
+            message_likes = MessageLikes.query.get((message_id, g.user.id))
     
+            if message_likes:
+                disliking_message(message_id)
+                db.session.commit()
+
+            else:
+                liking_message(message_id)
+                db.session.commit()
+                   
+    return redirect(page)
+
     
     
 # End of Liking and Unliking warblers

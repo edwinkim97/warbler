@@ -89,7 +89,7 @@ class User(db.Model):
     )
 
     # through relationships
-    message_likes = db.relationship('MessageLikes', backref = 'users')
+    liked_messages = db.relationship('Message', secondary = 'message_likes', backref = 'liked_users')
 
 
 
@@ -176,9 +176,6 @@ class Message(db.Model):
     )
 
     user = db.relationship('User')
-
-    # TODO through relationships (secondary) & simplify to one relationship
-    message_likes = db.relationship('MessageLikes', backref = 'messages')
 
 
 class MessageLikes(db.Model):
