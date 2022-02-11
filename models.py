@@ -88,6 +88,7 @@ class User(db.Model):
         secondaryjoin=(Follows.user_being_followed_id == id)
     )
 
+    # through relationships
     message_likes = db.relationship('MessageLikes', backref = 'users')
 
 
@@ -176,6 +177,7 @@ class Message(db.Model):
 
     user = db.relationship('User')
 
+    # TODO through relationships (secondary) & simplify to one relationship
     message_likes = db.relationship('MessageLikes', backref = 'messages')
 
 

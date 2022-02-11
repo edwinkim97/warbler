@@ -43,6 +43,7 @@ def add_user_to_g():
     else:
         g.user = None
 
+# TODO another app.before_request route to include CRSF form to all pages
 
 def do_login(user):
     """Log in user."""
@@ -412,12 +413,15 @@ def homepage():
 ##############################################################################
 # Liking and Unliking warblers
 
+# NOTE helper functions could be in another file or in part of a class
+# rename to like_message
 def liking_message(message_id):
     """Liking message and adding it to message_likes table"""
     
     liked = MessageLikes(message_id = message_id, user_id = g.user.id)
 
     db.session.add(liked)
+    # TODO db.session.commit() should not be in this helper function - it should live in the route
     db.session.commit()
     
 def disliking_message(message_id):
@@ -426,9 +430,12 @@ def disliking_message(message_id):
     disliked = MessageLikes.query.get((message_id, g.user.id))
     
     db.session.delete(disliked)
+    
+    # TODO db.session.commit() should not be in this helper function - it should live in the route
     db.session.commit()
 
 @app.post('/')
+# rename toggle like status
 def liking_messages_on_homepage():
     """Handles liking and disliking messages on homepage"""
     
@@ -449,6 +456,8 @@ def liking_messages_on_homepage():
 
     return redirect('/')
 
+# request.refer as an option for dymamic routes
+# form render include a hidden input value = request.url
 
 @app.post('/users/<int:user_id>')
 def liking_messages_on_user_detail_page(user_id):
@@ -495,12 +504,14 @@ def liking_messages_on_message_page(message_id):
 @app.post('/users/<int:user_id>/likes')
 def handles_liking_user_likes_page(user_id):
     """Handles liking and disliking on user profile's liked messages' page"""
+    #TODO should explain return location
     
     form = LikesForm()
 
     if form.validate_on_submit():
         
         message_id = form.message_id.data
+        #TODO message is not message_like
         message = MessageLikes.query.get((message_id, g.user.id))
         # Case when user has already liked message
         # if (g.user.id == message.user_id) and (message_id == message.message_id):
