@@ -4,6 +4,13 @@
 
 Warbler is a Flask-backed web that is inspired by Twitter deployed with Heroku.
 
+Features include:
+- Register and Login
+- Follow other users
+- Post a message
+- Like or Unlike other users' messages
+- Edit profile image, personal bio, and background header
+
 ## [Live Demo](https://edwinkim-demo-jobly.surge.sh/)
 
 # Getting Started on the Development Server
@@ -15,12 +22,13 @@ Warbler is a Flask-backed web that is inspired by Twitter deployed with Heroku.
 3. Make sure you are in a virtual environment
 4. `pip install -r requirements.txt`
 5. `psql`
-6. `CREATE DATABASE WARBLER`
+6. `CREATE DATABASE warbler`
+7. `CREATE DATABASE warbler_test`
 7. Exit psql
-8. `python seed.py`
+8. `python seed.py` (seeds database with sample users and messages)
 
 #### Create a .env file in the root directory and create these variables (choose your own secret key)
-- SECRET_KEY=abc123
+- SECRET_KEY=
 - DATABASE_URL=postgresql:///warbler
 
 #### Start the server
