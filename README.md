@@ -11,7 +11,7 @@ Features include:
 - Like or Unlike other users' messages
 - Edit profile image, personal bio, and background header
 
-## [Live Demo](https://edwinkim-demo-jobly.surge.sh/)
+## [Live Demo](https://demo-flask-warbler.herokuapp.com/)
 
 # Getting Started on the Development Server
 
