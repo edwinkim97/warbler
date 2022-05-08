@@ -1,11 +1,11 @@
-from email.utils import collapse_rfc2231_value
 import os
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, flash, redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
-from forms import UserAddForm, LoginForm, MessageForm, CSRFProtectForm, EditUserProfileForm, LikesForm
+from forms import (UserAddForm, LoginForm, MessageForm, CSRFProtectForm, 
+EditUserProfileForm, LikesForm)
 from models import db, connect_db, User, Message, MessageLikes
 
 CURR_USER_KEY = "curr_user"
@@ -20,12 +20,10 @@ app.config['SQLALCHEMY_DATABASE_URI'] = (
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ECHO'] = False
 app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
-app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
-toolbar = DebugToolbarExtension(app)
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
+# toolbar = DebugToolbarExtension(app)
 
 connect_db(app)
-# db.create_all()
-
 
 ##############################################################################
 # User signup/login/logout
@@ -35,7 +33,7 @@ connect_db(app)
 def add_user_to_g():
     """If we're logged in, add curr user to Flask global."""
 
-    add_logout_form()
+    add_csrf_form()
 
     if CURR_USER_KEY in session:
         g.user = User.query.get(session[CURR_USER_KEY])
@@ -57,7 +55,7 @@ def do_logout():
         del session[CURR_USER_KEY]
 
 
-def add_logout_form():
+def add_csrf_form():
     """Before every route, add CSRF-only form to global object."""
 
     g.csrf_form = CSRFProtectForm()
@@ -270,6 +268,7 @@ def profile():
         header_image_url = form.header_image_url.data
         if header_image_url == "":
             header_image_url = "/static/images/warbler-hero.jpg"
+        location = form.location.data
         bio = form.bio.data
 
         user = User.authenticate(g.user.username, password)
@@ -279,6 +278,7 @@ def profile():
             user.email = email
             user.image_url = image_url
             user.header_image_url = header_image_url
+            user.location = location
             user.bio = bio
 
             db.session.commit()
@@ -341,14 +341,14 @@ def messages_add():
 def messages_show(message_id):
     """Show a message."""
 
-    msg = Message.query.get(message_id)
+    msg = Message.query.get_or_404(message_id)
+
     return render_template(
         'messages/show.html',
         message=msg,
         form=g.csrf_form,
-        )
-
-
+    )
+        
 @app.post('/messages/<int:message_id>/delete')
 def messages_destroy(message_id):
     """Delete a message."""
@@ -357,7 +357,12 @@ def messages_destroy(message_id):
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    msg = Message.query.get(message_id)
+    msg = Message.query.get_or_404(message_id)
+
+    if msg.user_id != g.user.id:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
     db.session.delete(msg)
     db.session.commit()
 
@@ -425,25 +430,27 @@ def handles_like_unlike(**kwargs):
     
     form = LikesForm()
 
-    if form.validate_on_submit():
+    if not form.validate_on_submit() or not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
         
-        message_id = form.message_id.data
-        page = form.redirect.data
-        
-        message = Message.query.get(message_id)
-        message_user_id = message.user_id
-        
-        if message_user_id != g.user.id:
-
-            message_likes = MessageLikes.query.get((message_id, g.user.id))
+    message_id = form.message_id.data
+    page = form.redirect.data
     
-            if message_likes:
-                disliking_message(message_id)
-                db.session.commit()
+    message = Message.query.get(message_id)
+    message_user_id = message.user_id
+    
+    if message_user_id != g.user.id:
 
-            else:
-                liking_message(message_id)
-                db.session.commit()
+        message_likes = MessageLikes.query.get((message_id, g.user.id))
+
+        if message_likes:
+            disliking_message(message_id)
+            db.session.commit()
+
+        else:
+            liking_message(message_id)
+            db.session.commit()
                    
     return redirect(page)
 
