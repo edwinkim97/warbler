@@ -1,4 +1,4 @@
-# fly.toml file generated for ek-warbler on 2023-01-03T15:40:45-08:00
+# fly.toml file generated for ek-warbler on 2023-01-03T22:31:39-08:00
 
 app = "ek-warbler"
 kill_signal = "SIGINT"
