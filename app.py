@@ -16,11 +16,11 @@ app = Flask(__name__)
 # Get DB_URI from environ variable (useful for production/testing) or,
 # if not set there, use development local db.
 app.config['SQLALCHEMY_DATABASE_URI'] = (
-    os.environ['DATABASE_URL'].replace("postgres://", "postgresql://"))
+    "postgresql:///warbler".replace("postgres://", "postgresql://"))
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ECHO'] = False
 app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
+app.config['SECRET_KEY'] = "abc123"
 # toolbar = DebugToolbarExtension(app)
 
 connect_db(app)
